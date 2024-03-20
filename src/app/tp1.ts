@@ -105,7 +105,20 @@ const toto = Zip([1, 2], [true, false], ["coucou"])
  * Lever l'erreur à l'aide de throw new Error( ....... )
  */
 export function ProduitScalaire(V1: readonly number[], V2: readonly number[]): number {
-    return NaN;
+    if (V1.length === 0 || V2.length === 0){
+        throw new Error("Les vecteurs doivent être non vides")
+    }
+
+    if(V1.length !== V2.length){
+        throw new Error("Les vecteurs doivent être de même taille")
+    }
+
+    let result = 0;
+    for (let i = 0; i < V1.length; i++) {
+        result += V1[i] * V2[i];
+    }
+
+    return result;
 }
 
 
@@ -121,17 +134,62 @@ export function ProduitScalaire(V1: readonly number[], V2: readonly number[]): n
  *      - "M2 ne peut pas être vide"  -> La matrice M2 est vide (0 ligne u 0 colonne)
  *      - "Les matrices doivent avoir la même taille"  -> La matrice est vide (0 lignes u 0 colonnes)
  */
-type ScalarMatrix = unknown; // à redéfinir
-type AjoutResult  = unknown; // à redéfinir
+type ScalarMatrix =  ReadonlyArray<ReadonlyArray<number>>;
+type AjoutResult  = {
+    success: boolean;
+    result?: ScalarMatrix;
+    error?: "M1 n'est pas bien formée" | "M2 n'est pas bien formée" | "M1 ne peut pas être vide" | "M2 ne peut pas être vide" | "Les matrices doivent avoir la même taille" | "Il faut au moins 2 matrices pour effectuer une somme";
+};
 
 export function AjoutMatrices(M1: ScalarMatrix, M2: ScalarMatrix): AjoutResult {
-    return undefined;
+    if (!( M1.every(row => row.length === M1[0].length))) {
+        return { success: false, error: "M1 n'est pas bien formée" };
+    }
+    else if (!( M2.every(row => row.length === M2[0].length))) {
+        return { success: false, error: "M2 n'est pas bien formée" };
+    }
+    else if (M1.length === 0 || M1[0].length === 0) {
+        return { success: false, error: "M1 ne peut pas être vide" };
+    }
+    else if (M2.length === 0 || M2[0].length === 0) {
+        return { success: false, error: "M2 ne peut pas être vide" };
+    }
+    else if (M1.length !== M2.length || M1[0].length !== M2[0].length) {
+        return { success: false, error: "Les matrices doivent avoir la même taille" };
+    }
+
+    const result: number[][] = [];
+    for (let i = 0; i < M1.length; i++) {
+        result.push([]);
+        for (let j = 0; j < M1[i].length; j++) {
+            result[i].push(M1[i][j] + M2[i][j]);
+        }
+    }
+
+    return { success: true, result };
 }
+
 
 /**
  * Codez une fonction qui somme une liste de matrices (au moins 2)
  * Adaptez le code de la fonction AjoutMatrices ainsi que les codes erreurs
  */
+export function SommeMatrices(matrices: ScalarMatrix[]): AjoutResult {
+    if (matrices.length < 2) {
+        return { success: false, error: "Il faut au moins 2 matrices pour effectuer une somme" };
+    }
+
+    let result: ScalarMatrix = matrices[0];
+    for (let i = 1; i < matrices.length; i++) {
+        const addition = AjoutMatrices(result, matrices[i]);
+        if (!addition.success) {
+            return addition;
+        }
+        result = addition.result!;
+    }
+
+    return { success: true, result };
+}
 
 
 
